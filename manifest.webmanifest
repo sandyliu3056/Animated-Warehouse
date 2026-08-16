@@ -1,0 +1,35 @@
+{
+  "name": "Animated Warehouse",
+  "short_name": "Animated Warehouse",
+  "description": "3PL 物流教育訓練：倉儲作業動畫與 UPS／FedEx／USPS 計費教材",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#16212A",
+  "theme_color": "#3B2A1B",
+  "lang": "zh-Hant",
+  "icons": [
+    {
+      "src": "icon-180-2.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-192-2.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512-2.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-maskable-512-2.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
