@@ -5,12 +5,12 @@
  * 上一版沒改這個字串就換了圖示，結果裝好的人一直吃到舊圖示——
  * 圖片走的是 cache-first，名稱沒變就永遠不會去抓新的。
  */
-const BUILD = "2026-08-16-j";
+const BUILD = "2026-08-16-k";
 const CACHE = "aw-" + BUILD;
 const SHELL = [
   "./", "./index.html", "./manifest.webmanifest",
-  "./icon-180-3.png", "./icon-192-3.png",
-  "./icon-512-3.png", "./icon-maskable-512-3.png"
+  "./icon-180-4.png", "./icon-192-4.png",
+  "./icon-512-4.png", "./icon-maskable-512-4.png"
 ];
 
 self.addEventListener("install", e => {
