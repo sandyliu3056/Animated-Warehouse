@@ -4967,14 +4967,61 @@ function drawScene(){
     const leaving=m.job==="leave";
     /* 待機小動作：偶爾伸個懶腰、看一下手錶。每個人的週期不一樣，
        所以不會五個人同時抬手——那比都不動更奇怪。 */
+    /* ---- 上工的時候要在做事 ----
+       原本沒有 job 的人只有「偶爾伸懶腰」，其餘時間站著不動——
+       產線在跑、輸送帶在動，人卻閒著，看起來像下班了。
+       每個人給一件固定的工作，動作跟著產線的節拍走。 */
     const idleT=(SS.frame*(m.rate||1)+i*430)%900;
     const stretch = (!m.job && !SS.run && idleT<70) ? Math.sin(idleT/70*Math.PI)*22 : 0;
     const ph_ = leaving ? m.ph : (m.job ? m.ph : SS.wp*(m.rate||1)+(m.off||0)+i*2);
+
+    /* 五個人各一種活：搬箱、掃描、貼標、搬箱、掃描。
+       用 index 分配，不隨機——隨機的話同一個人每一幀在做不同的事。 */
+    /* 輸送帶上本來就有一排箱子在跑。五個人裡放兩個搬箱的話，
+       畫面上箱子太多，分不清哪個是人拿的、哪個在帶子上。
+       只留一個搬箱，其餘拿掃描槍和貼標器——那兩樣是帶子上沒有的。 */
+    const JOB_KIND = ["scan","label","lift","scan","label"][i % 5];
+    const working  = SS.run && !m.job && !leaving;
+    /* 工作的節拍：每個人的相位錯開，五個人才不會同步 */
+    const wt   = (SS.frame*(m.rate||1) + i*77) % 120;
+    const wu   = working ? (Math.sin(wt/120*Math.PI*2)*0.5+0.5) : 0;
+    /* 搬箱的人手抬高一點，掃描和貼標的人手在腰際 */
+    const workLift = !working ? 0
+                   : JOB_KIND==="lift"  ? 14+10*wu
+                   : JOB_KIND==="scan"  ? 18+4*wu
+                   :                      12+6*wu;
+
     worker(m.x,m.y,ph_,
       {...av(m),
-       armLift:leaving&&m.wave<210?26+Math.sin(SS.frame*0.34)*7:(m.job?0:(m.lift+stretch)),
+       armLift:leaving&&m.wave<210?26+Math.sin(SS.frame*0.34)*7
+               :(m.job?0:(m.lift+stretch+workLift)),
        waveSide:leaving&&m.wave<210?1:0,
        face:leaving?(m.wave<210?1:-1):(mine?(P.phase==="go"?1:-1):(vis?1:0))});
+
+    /* 手上的東西。畫在人之後，才會在身體前面。 */
+    if(working){
+      /* 道具擺在身側偏前，不要壓在胸口。
+         第一版箱子畫成 22×18，比人的軀幹還寬，整個人被蓋掉一半；
+         掃描槍反而只有 13×8，小到看不出是什麼。兩個都重抓尺寸。 */
+      const hx = m.x + 15, hy = m.y - 26 - workLift*0.4;
+      if(JOB_KIND==="lift"){
+        /* 抱著的紙箱：略小於軀幹寬度，貼在身體前緣 */
+        box3d(hx-8, hy-7, hx+8, hy+7, C.kraft, C.wood2, 0.08);
+        R(hx-4, hy-3, hx+4, hy+1, C.cream);
+      } else if(JOB_KIND==="scan"){
+        /* 掃描槍：加大到看得出握把和槍身，掃描時前端一道紅光 */
+        R(hx-4, hy-1, hx+4, hy+11, "#3A4148", "#22282E", 1);
+        R(hx-9, hy-11, hx+10, hy-1, "#4A535A", "#2E353B", 1);
+        R(hx-5, hy-9, hx+5, hy-5, "#8FD8F0");
+        if(wu > 0.6) L([hx+10, hy-6, hx+26, hy-6], "rgba(226,80,60,.72)", 2.4);
+      } else {
+        /* 貼標器：一台手持的，前端吐出一張標籤 */
+        R(hx-8, hy-8, hx+8, hy+5, "#C24B3A", "#8A3323", 1);
+        R(hx-5, hy-5, hx+5, hy-1, C.cream);
+        R(hx-3, hy+5, hx+3, hy+11, "#3A4148");
+        if(wu > 0.5) R(hx+8, hy-4, hx+15, hy+1, C.cream, "#B9AC93", 1);
+      }
+    }
   });
   /* 辦公桌畫在人之後、輸送帶之前：它比走道上的人遠一點，比輸送帶近。
      螢幕在有人坐著或天黑的時候才亮，沒人又白天亮著只是浪費電。 */
