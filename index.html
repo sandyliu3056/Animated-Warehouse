@@ -7827,10 +7827,15 @@ function fitZoomCanvas(){
   const BAR = 54 + sa;
   const rot = vh0 > vw;                           /* 直向才轉 */
   document.body.classList.toggle("rot", rot);
-  /* 轉的時候鍵列豎在螢幕左緣（＝場景的下緣），吃掉的是寬度不是高度。 */
-  /* 鍵列改成半透明疊在邊上，不再從可用區扣掉——扣掉的那一條在直向就是
-     場景的高度，整張會小一圈。 */
-  const availW = vw, availH = vh0;
+  /* 鍵列的空間：
+     ・轉 90 度（rot）時鍵列豎在螢幕左緣，吃掉的是寬度不是高度。
+     ・沒轉的橫向（手機打橫）時鍵列橫在底部，會蓋住場景最下面那一條——
+       而貓狗的走道就在 PET_Y=478，離場景底部只有 82px，剛好被蓋掉
+       （回報：橫向全螢幕看不到貓狗）。所以這裡要把鍵列的高度扣掉。
+     直向不扣，因為那時扣掉會讓整張小一圈。 */
+  const landscape = !rot && vw > vh0;
+  const availW = rot ? vw : vw;
+  const availH = landscape ? (vh0 - BAR) : vh0;
   /* 整張都要看得到，不切。試過 cover（長邊填滿、短邊切掉）比較大，
      但切掉畫面比小更討厭——直向手機靠轉 90 度已經拿回大部分尺寸了。 */
   const k = rot ? Math.min(availH/SCENE_W, availW/SCENE_H)
@@ -11109,11 +11114,7 @@ function dog(x,y,t,fa,walk,B,lift,eat,squat){
   hcDot(hxx-S(4)*fa,ey2+S(0.4),S(2.7),"#FFFFFF");
   hcDot(hxx-S(4)*fa,ey2+S(0.4),S(2.2),"#20282E");
   hcDot(hxx-S(4.8)*fa,ey2-S(0.6),S(0.9),"#FFFFFF");
-  /* 眉毛：兩道短弧。柴犬和杜賓那種淺色眉斑是辨識點，也讓表情活起來。 */
-  /* 眉斑是「淺色」的一塊，不是深色的線。用壓深 30% 畫在深色狗身上
-     跟毛色幾乎同色，等於沒畫。改成提亮，深淺毛色都看得見。 */
-  [[3,-7],[-4.2,-6]].forEach(([ox,oy])=>
-    hcEll(hxx+S(ox)*fa, hyy+S(oy), S(2.6), S(1.5), mix(b,0.34), 87+ox, 0));
+  /* 眉毛拿掉了。 */
   hcDot(hxx+S(11)*fa,hyy+S(2.4),S(2.1),"#20282E");       /* 鼻頭 */
   hcDot(hxx+S(10.2)*fa,hyy+S(1.6),S(0.7),"rgba(255,255,255,.34)");
   /* 腮紅 */
