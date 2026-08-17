@@ -7802,6 +7802,9 @@ function mountGame(){
    ===================================================================== */
 const ZOOM_LBL=["\u653e\u5927\u756b\u9762","Enlarge","Ampliar"];
 function zoomOn(){ return document.body.classList.contains("zoomed"); }
+/* 手動全螢幕時鎖住的旋轉方向。null 表示還沒決定（下一次重配時決定）。
+   離開全螢幕就清掉，下次按進去重新判斷。 */
+let MANUAL_ROT = null;
 function setZoom(on){
   document.body.classList.toggle("zoomed", on);
   const b=document.getElementById("zoom");
@@ -7825,7 +7828,14 @@ function fitZoomCanvas(){
     d.style.cssText="position:fixed;bottom:0;height:env(safe-area-inset-bottom);visibility:hidden";
     document.body.appendChild(d); const v=d.getBoundingClientRect().height; d.remove(); return v; })();
   const BAR = 54 + sa;
-  const rot = vh0 > vw;                           /* 直向才轉 */
+  /* 要不要轉 90 度：一律看實體方向，直向才轉。
+     這件事本身是對的——轉 90 度是為了在直向手機上把場景放大，
+     螢幕已經是橫的就不需要轉。鎖住方向反而會讓橫向算出很小的尺寸。
+
+     使用者說的「又亂轉」不是這裡的問題，是轉向的當下畫面翻了一下。
+     那是必然的（直向躺著看 → 橫向正著看），但過程要平順，
+     所以下面加了轉場的抑制：轉向期間先不重繪，等尺寸穩定再一次到位。 */
+  const rot = vh0 > vw;
   document.body.classList.toggle("rot", rot);
   /* 可用區用滿整個視窗，不扣鍵列。
      扣掉的話畫面會整個縮小一圈（回報：橫向要跟全螢幕一樣大小）。
@@ -7915,11 +7925,19 @@ function isPhoneLandscape(){
    nudgeOrientation 在 700ms 內連打五次 syncOrientationZoom——每一次都
    無條件重配畫布，就用當下那個中途的尺寸算一次，畫面於是連跳五次
    （回報：手機橫向全螢幕會亂跑）。記住上次用的尺寸，一樣就不重配。 */
-let LAST_FIT = "";
+let LAST_FIT = null;
 function fitZoomOnce(force){
-  const key = innerWidth + "x" + innerHeight + ":" + (zoomOn() ? 1 : 0);
-  if(!force && key === LAST_FIT) return;
-  LAST_FIT = key;
+  const w = innerWidth, h = innerHeight, z = zoomOn() ? 1 : 0;
+  /* 容忍幾個像素的變化。
+     iOS 橫向時網址列會隨捲動收合／展開，innerHeight 一直在幾像素之間跳
+     （402 → 396 → 402 …），而 visualViewport 的 resize 每次都會觸發。
+     用精確比對當條件的話，等於每隔幾十毫秒就重排一次——畫面就一直在跳。
+     只有真正換了方向或尺寸明顯變了才重排。 */
+  if(!force && LAST_FIT
+     && LAST_FIT.z === z
+     && Math.abs(LAST_FIT.w - w) <= 24
+     && Math.abs(LAST_FIT.h - h) <= 24) return;
+  LAST_FIT = {w, h, z};
   fitZoomCanvas();
 }
 function syncOrientationZoom(){
@@ -7956,6 +7974,7 @@ document.addEventListener("visibilitychange", ()=>{
 function toggleZoom(){
   const on=!zoomOn();
   AUTO_ZOOM = false;        /* 手動按過就交給使用者決定，轉向不再自動關 */
+  MANUAL_ROT = null;        /* 方向重新決定一次，之後鎖住 */
   setZoom(on); sfxClick();
   /* 放大會整個改變顯示尺寸，立刻重配一次，不要等下一個檢查週期。
      手動按的一定要重配（force），不能被「尺寸沒變就跳過」擋掉。 */
@@ -10754,8 +10773,12 @@ coverInit();
 })();
 /* 想重看導覽：網址加 #tour。看完寫旗標，平常不會再跑。 */
 if(location.hash==="#tour") setTimeout(()=>tourStart(true), 900);
-window.addEventListener("resize", ()=>{ if(zoomOn()) fitZoomCanvas(); });
-window.addEventListener("orientationchange", ()=>setTimeout(fitZoomCanvas,180));
+/* 這兩條原本直接呼叫 fitZoomCanvas()，繞過了 fitZoomOnce 的判斷——
+   iOS 橫向時網址列收合會讓 innerHeight 一直在幾像素之間跳，每跳一次
+   這裡就重排一次，畫面於是持續在動（回報：橫向一直在跳）。
+   改走 fitZoomOnce，尺寸沒有明顯變化就不重排。 */
+window.addEventListener("resize", ()=>{ if(zoomOn()) fitZoomOnce(false); });
+window.addEventListener("orientationchange", ()=>setTimeout(()=>fitZoomOnce(true),180));
 const onceUnlock=()=>{ sfxUnlock(); document.removeEventListener("pointerdown",onceUnlock); };
 document.addEventListener("pointerdown",onceUnlock);
 /* 全站關掉右鍵／長按選單：這裡沒有東西需要拷貝，
