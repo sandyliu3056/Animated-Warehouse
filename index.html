@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#3B2A1B">
 <title>Animated Warehouse</title>
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" sizes="180x180" href="icon-180-11.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192-11.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180-12.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192-12.png">
 <meta name="apple-mobile-web-app-title" content="Animated Warehouse">
 <meta name="application-name" content="Animated Warehouse">
 <style>
@@ -44,7 +44,7 @@ body:before, body:after{content:"";position:fixed;left:0;right:0;
   background:var(--dk);z-index:5;pointer-events:none}
 body:before{top:0;height:env(safe-area-inset-top)}
 body:after{bottom:0;height:env(safe-area-inset-bottom)}
-body{font-family:"Bradley Hand","Chalkboard SE","Chalkboard","Marker Felt","Comic Sans MS","Segoe Print","Ink Free","Klee One","Zen Maru Gothic","Kosugi Maru",ui-rounded,"SF Pro Rounded","Yuanti TC","Yuanti SC","Hiragino Maru Gothic ProN","Varela Round","PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;letter-spacing:.2px;
+body{font-family:"Chalkboard SE","Chalkboard","Comic Sans MS","Klee One",ui-rounded,"SF Pro Rounded","Yuanti TC","Yuanti SC","Hiragino Maru Gothic ProN","Varela Round","PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;letter-spacing:.2px;
      color:#2B2119;display:flex;flex-direction:column;letter-spacing:.2px;
      padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0}
 #bar{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:9px 12px;
@@ -4013,7 +4013,13 @@ function L(p,c,w,cap){g.beginPath();g.moveTo(p[0],p[1]);for(let i=2;i<p.length;i
 function P(p,f,o,w){g.beginPath();g.moveTo(p[0],p[1]);for(let i=2;i<p.length;i+=2)g.lineTo(p[i],p[i+1]);g.closePath();if(f){g.fillStyle=f;g.fill();}if(o){g.strokeStyle=o;g.lineWidth=w||1;g.stroke();}}
 /* 字型：手寫感排前面，圓體殿後。中文的手寫字型系統上不一定有，
    只能有就用、沒有自然往後退——指定死的話 Windows 會掉到宋體。 */
-const CUTE_FONT='"Bradley Hand","Chalkboard SE","Chalkboard","Marker Felt","Comic Sans MS","Segoe Print","Ink Free","Klee One","Zen Maru Gothic","Kosugi Maru",ui-rounded,"SF Pro Rounded","Yuanti TC","Yuanti SC","Hiragino Maru Gothic ProN","Varela Round","PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif';
+/* 字型：手感要有，但不要潦草。
+   原本排最前面的 Bradley Hand、Marker Felt、Segoe Print、Ink Free
+   都是鋼筆／馬克筆那種連筆字，在 iPhone 上會被選中，字就糊成一團
+   （回報：手機版的太草了）。
+   改成 Chalkboard 打頭——粉筆體，筆畫端正、字距清楚，但仍是手寫的，
+   而且 iOS 和 macOS 都有。中文一律落到圓體，中文手寫體太細看不清。 */
+const CUTE_FONT='"Chalkboard SE","Chalkboard","Comic Sans MS","Klee One",ui-rounded,"SF Pro Rounded","Yuanti TC","Yuanti SC","Hiragino Maru Gothic ProN","Varela Round","PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif';
 function TXT_(x,y,s,c,sz,b,al){g.fillStyle=c;g.font=(b?"bold ":"")+sz+"px "+CUTE_FONT;g.textAlign=al||"center";g.textBaseline="middle";g.fillText(s,x,y);}
 function ARC(x0,y0,x1,y1,st,ex,c,w){g.beginPath();g.ellipse((x0+x1)/2,(y0+y1)/2,Math.abs(x1-x0)/2,Math.abs(y1-y0)/2,0,-st*Math.PI/180,-(st+ex)*Math.PI/180,true);g.strokeStyle=c;g.lineWidth=w||1;g.stroke();}
 function box3d(x0,y0,x1,y1,f,o,k){const side=mix(f,-0.16),cap=mix(f,0.12);
