@@ -11,22 +11,22 @@
   "lang": "zh-Hant",
   "icons": [
     {
-      "src": "icon-180-11.png",
+      "src": "icon-180-12.png",
       "sizes": "180x180",
       "type": "image/png"
     },
     {
-      "src": "icon-192-11.png",
+      "src": "icon-192-12.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "icon-512-11.png",
+      "src": "icon-512-12.png",
       "sizes": "512x512",
       "type": "image/png"
     },
     {
-      "src": "icon-maskable-512-11.png",
+      "src": "icon-maskable-512-12.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
