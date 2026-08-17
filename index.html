@@ -7911,12 +7911,23 @@ function isPhoneLandscape(){
      長邊 ≤1100 留給未來機型，反正有觸控條件擋著桌機。 */
   return land && isTouchDevice() && short <= 500 && long <= 1100;
 }
+/* 上一次配置畫布時的視窗尺寸。轉向之後 iOS 會分段更新尺寸，而
+   nudgeOrientation 在 700ms 內連打五次 syncOrientationZoom——每一次都
+   無條件重配畫布，就用當下那個中途的尺寸算一次，畫面於是連跳五次
+   （回報：手機橫向全螢幕會亂跑）。記住上次用的尺寸，一樣就不重配。 */
+let LAST_FIT = "";
+function fitZoomOnce(force){
+  const key = innerWidth + "x" + innerHeight + ":" + (zoomOn() ? 1 : 0);
+  if(!force && key === LAST_FIT) return;
+  LAST_FIT = key;
+  fitZoomCanvas();
+}
 function syncOrientationZoom(){
   const want = isPhoneLandscape();
-  if(want && !zoomOn()){ AUTO_ZOOM = true; setZoom(true); setTimeout(fitZoomCanvas,60); }
-  else if(want && zoomOn()) setTimeout(fitZoomCanvas,60);   /* 已在全螢幕：畫布重配一次 */
+  if(want && !zoomOn()){ AUTO_ZOOM = true; setZoom(true); setTimeout(()=>fitZoomOnce(true),60); }
+  else if(want && zoomOn()) setTimeout(()=>fitZoomOnce(false),60);   /* 已在全螢幕：尺寸變了才重配 */
   /* 自動進來的才自動退出。使用者自己按進去的，轉回直向不要幫他關掉。 */
-  else if(!want && zoomOn() && AUTO_ZOOM){ AUTO_ZOOM = false; setZoom(false); setTimeout(fitZoomCanvas,60); }
+  else if(!want && zoomOn() && AUTO_ZOOM){ AUTO_ZOOM = false; setZoom(false); setTimeout(()=>fitZoomOnce(true),60); }
 }
 /* 轉向之後視窗尺寸不是馬上更新。iOS 上 orientationchange 觸發的當下
    innerWidth／innerHeight 還是舊值，只檢查一次會判斷成「還是直向」。
@@ -7946,8 +7957,9 @@ function toggleZoom(){
   const on=!zoomOn();
   AUTO_ZOOM = false;        /* 手動按過就交給使用者決定，轉向不再自動關 */
   setZoom(on); sfxClick();
-  /* 放大會整個改變顯示尺寸，立刻重配一次，不要等下一個檢查週期 */
-  setTimeout(fitZoomCanvas,60);
+  /* 放大會整個改變顯示尺寸，立刻重配一次，不要等下一個檢查週期。
+     手動按的一定要重配（force），不能被「尺寸沒變就跳過」擋掉。 */
+  setTimeout(()=>fitZoomOnce(true),60);
   /* 真全螢幕能再拿回瀏覽器網址列那 ~60px。iOS Safari 不給一般元素全螢幕，
      失敗就當作沒發生——版面本來就已經是 fixed inset:0 了。 */
   try{
