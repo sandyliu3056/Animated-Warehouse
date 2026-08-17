@@ -11198,7 +11198,30 @@ function catDraw(x,y,t,fa,walk,sq,B,eat){
 </script>
 <script>
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(()=>{}));
+  /* 註冊時帶版本號。
+     瀏覽器對 sw.js 這個檔案本身也有快取——舊的 service worker 還在跑，
+     手機根本不會去抓新的那支，所以 sw.js 裡的 BUILD 換了它也不知道，
+     一直吃舊快取（回報：網址進去是新版，手機卻是舊的）。
+     網址後面掛 APP_VER，換版就是不同的 URL，一定會重新抓。
+
+     另外主動叫它檢查更新並在裝好後立刻接手，不用等所有分頁都關掉。 */
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js?v=" + APP_VER)
+      .then(reg => {
+        reg.update();
+        reg.addEventListener("updatefound", () => {
+          const nw = reg.installing;
+          if(!nw) return;
+          nw.addEventListener("statechange", () => {
+            /* 新的裝好、而且已經有舊的在控制 → 換版了，重整一次拿新檔 */
+            if(nw.state === "activated" && navigator.serviceWorker.controller){
+              location.reload();
+            }
+          });
+        });
+      })
+      .catch(()=>{});
+  });
 }
 </script>
 </body>
