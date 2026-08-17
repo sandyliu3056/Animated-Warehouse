@@ -7843,8 +7843,18 @@ function fitZoomCanvas(){
   const availW = vw, availH = vh0;
   /* 整張都要看得到，不切。試過 cover（長邊填滿、短邊切掉）比較大，
      但切掉畫面比小更討厭——直向手機靠轉 90 度已經拿回大部分尺寸了。 */
-  const k = rot ? Math.min(availH/SCENE_W, availW/SCENE_H)
-                : Math.min(availW/SCENE_W, availH/SCENE_H);
+  /* 縮放比。
+     沒轉的橫向要讓貓狗那條走道（PET_Y=478，離場景底部只有 82 個單位）
+     露在鍵列上方。畫布置頂之後，那條在螢幕上的位置是 PET_Y*k，
+     必須 ≤ vh0-BAR，也就是 k ≤ (vh0-BAR)/PET_Y。
+     視窗夠高的時候這個上限根本不會生效（滿版照舊）；視窗矮的時候
+     它會把畫布縮一點點，換到貓狗看得見——比整條被蓋掉好。 */
+  let k = rot ? Math.min(availH/SCENE_W, availW/SCENE_H)
+              : Math.min(availW/SCENE_W, availH/SCENE_H);
+  if(!rot){
+    const kPet = (vh0 - BAR - 6) / PET_Y;      /* 6px 餘裕，不要剛好貼齊 */
+    if(kPet > 0) k = Math.min(k, kPet);
+  }
   const w=Math.round(SCENE_W*k), h=Math.round(SCENE_H*k);
   cv.style.position="absolute";
   /* 用像素算中心，不要用 50%：轉的時候鍵列吃掉左邊 54px，
@@ -7859,12 +7869,9 @@ function fitZoomCanvas(){
      縮小畫布可以避開，但整張會小一圈——不縮，改成把畫布往上推，
      讓上下的餘白不對稱：上面不留、下面留給鍵列。
      餘白不夠鍵列高的時候就盡量推，推到頂為止。 */
-  let topPx = rot ? vh0/2 : availH/2;
-  if(!rot){
-    const slack = availH - h;                 /* 上下總共剩多少 */
-    const want  = Math.min(BAR, slack);       /* 底下想留給鍵列的高度 */
-    topPx = h/2 + (slack - want)/2;           /* 上面只留剩下的一半 */
-  }
+  /* 沒轉的橫向直接置頂：上面的縮放已經保證底部留得下鍵列，
+     再置中的話等於把畫面往下推，反而又壓到。 */
+  const topPx = rot ? vh0/2 : h/2;
   cv.style.top =Math.round(topPx)+"px";
   cv.style.width=w+"px"; cv.style.height=h+"px";
   cv.style.transformOrigin="50% 50%";
