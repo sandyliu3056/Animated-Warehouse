@@ -7827,15 +7827,10 @@ function fitZoomCanvas(){
   const BAR = 54 + sa;
   const rot = vh0 > vw;                           /* 直向才轉 */
   document.body.classList.toggle("rot", rot);
-  /* 鍵列的空間：
-     ・轉 90 度（rot）時鍵列豎在螢幕左緣，吃掉的是寬度不是高度。
-     ・沒轉的橫向（手機打橫）時鍵列橫在底部，會蓋住場景最下面那一條——
-       而貓狗的走道就在 PET_Y=478，離場景底部只有 82px，剛好被蓋掉
-       （回報：橫向全螢幕看不到貓狗）。所以這裡要把鍵列的高度扣掉。
-     直向不扣，因為那時扣掉會讓整張小一圈。 */
-  const landscape = !rot && vw > vh0;
-  const availW = rot ? vw : vw;
-  const availH = landscape ? (vh0 - BAR) : vh0;
+  /* 可用區用滿整個視窗，不扣鍵列。
+     扣掉的話畫面會整個縮小一圈（回報：橫向要跟全螢幕一樣大小）。
+     鍵列的遮擋改用別的方式解決——見下面把場景往上推的那一段。 */
+  const availW = vw, availH = vh0;
   /* 整張都要看得到，不切。試過 cover（長邊填滿、短邊切掉）比較大，
      但切掉畫面比小更討厭——直向手機靠轉 90 度已經拿回大部分尺寸了。 */
   const k = rot ? Math.min(availH/SCENE_W, availW/SCENE_H)
@@ -7849,7 +7844,18 @@ function fitZoomCanvas(){
      場景右邊 88px 就掉出畫面外（回報：放大也不對）。
      鍵列現在是半透明疊在左緣、沒有從可用區扣掉，所以中心就是 availW/2。 */
   cv.style.left=Math.round(rot ? availW/2 : vw/2)+"px";
-  cv.style.top =Math.round(rot ? vh0/2       : availH/2)+"px";
+  /* 垂直位置：畫布本來是置中的，底下剩的空白剛好被鍵列蓋掉，
+     場景最下面那一條（貓狗的走道在 PET_Y=478）就看不到了。
+     縮小畫布可以避開，但整張會小一圈——不縮，改成把畫布往上推，
+     讓上下的餘白不對稱：上面不留、下面留給鍵列。
+     餘白不夠鍵列高的時候就盡量推，推到頂為止。 */
+  let topPx = rot ? vh0/2 : availH/2;
+  if(!rot){
+    const slack = availH - h;                 /* 上下總共剩多少 */
+    const want  = Math.min(BAR, slack);       /* 底下想留給鍵列的高度 */
+    topPx = h/2 + (slack - want)/2;           /* 上面只留剩下的一半 */
+  }
+  cv.style.top =Math.round(topPx)+"px";
   cv.style.width=w+"px"; cv.style.height=h+"px";
   cv.style.transformOrigin="50% 50%";
   cv.style.transform="translate(-50%,-50%)"+(rot?" rotate(90deg)":"");
