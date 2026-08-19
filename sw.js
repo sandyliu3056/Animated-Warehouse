@@ -5,7 +5,7 @@
  * 上一版沒改這個字串就換了圖示，結果裝好的人一直吃到舊圖示——
  * 圖片走的是 cache-first，名稱沒變就永遠不會去抓新的。
  */
-const BUILD = "2026-08-20-v224";
+const BUILD = "2026-08-20-v225";
 const CACHE = "aw-" + BUILD;
 const SHELL = [
   "./", "./index.html", "./manifest.webmanifest",
