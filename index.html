@@ -21,40 +21,39 @@
 /* 這六個變數由 paintTheme() 依承運人覆寫，所以介面用色一律走變數，
    不要再寫死色碼——PDF 鍵原本是寫死的棕色，切到 FedEx 就只有它沒跟上。 */
 :root{--dk:#3B2A1B;--md:#5A3A26;--lt:#7C5236;--ac:#E8B93C;--pale:#D8C3AE;--tint:#F5EFE4}
-/* iOS 上 height:100% 算的是網址列收起時那個較大的高度，實際可視區比它小，
-   結果頁尾下面多出一塊捲得到、卻什麼都沒有的空白。dvh 跟著可視區走；
-   不認得 dvh 的瀏覽器會忽略第二行，退回 100%。
-   內容捲動全部交給 #page，body 自己不需要捲，關掉可以順便擋住 iOS 的橡皮筋。 */
-/* 底色跟頂欄／頁尾同一個深色。iOS 上外殼有時候還是填不滿整個螢幕（瀏覽器
-   工具列、瀏海、底部手勢條各有各的算法），剩下那一條與其露出淺色的空白，
-   不如跟上下兩條深色橫條同色——看起來就是橫條延伸到螢幕邊緣。 */
+/* 底色跟頂欄／署名同一個深色。萬一外殼還是有沒填滿的一條（各家瀏覽器對
+   工具列、瀏海、底部手勢條的算法不一樣），露出來的也是同色，看起來就是
+   橫條延伸到螢幕邊緣，而不是一塊白。 */
 html{height:100%;background:var(--dk)}
 /* iOS 上不管 height:100% 還是 100dvh，都有算不準可視區的時候（尤其是加到
    主畫面的獨立視窗），結果頁尾底下多出一塊捲得到、卻什麼都沒有的空白。
-   直接把整個外殼釘在可視區上：position:fixed + inset:0 不靠任何高度計算，
-   永遠等於螢幕本身。內容捲動全部交給 #page。 */
-body{margin:0;position:fixed;inset:0;overflow:hidden;
+   所以外殼一律釘住，內容捲動全部交給 #page。
+   但 inset:0 對到的是「網址列收起時」的版面視埠，而 body 自己 overflow:hidden、
+   頁面永遠不捲，Safari 的網址列就永遠不會收——最下面那一截（署名那條）等於
+   一直躲在工具列後面。改成從頂端往下量 100svh：svh 就是「瀏覽器介面展開時」
+   的高度，跟眼睛看到的一樣。獨立視窗沒有網址列，svh 等於整個螢幕，不受影響。
+   不認得 svh 的瀏覽器會忽略第二行，退回 height:100%（即原本的行為）。 */
+body{margin:0;position:fixed;top:0;left:0;right:0;height:100%;overflow:hidden;
      background:var(--tint);overscroll-behavior-y:none}
-/* body 的 padding 是安全區（瀏海與 home indicator 那兩條）。那兩條原本露出
-   米白的頁面底色，跟深色的頂欄和署名接不起來，看起來像沒鋪滿
-   （回報：整個 iOS 配置不對）。
-   直接把 body 底色改深會連內容區一起變暗，動到太多；改成用兩個 fixed 的
-   偽元素只把那兩條補成深色，中間內容區維持原本的米白。 */
-body:before, body:after{content:"";position:fixed;left:0;right:0;
-  background:var(--dk);z-index:5;pointer-events:none}
-body:before{top:0;height:env(safe-area-inset-top)}
-body:after{bottom:0;height:env(safe-area-inset-bottom)}
+body{height:100svh}
+/* 安全區（瀏海與 home indicator 那兩條）只能讓一次。原本 body 的 padding 讓了
+   一條、#credit 自己的 padding 又讓了一條，底下就變成兩倍高的空白。
+   改成 body 不留 padding，由頂欄和署名各自把自己那一邊的安全區加進 padding：
+   兩者本來就是深色，撐開之後那兩條自然是深色的，也就不再需要偽元素補色。 */
 body{font-family:"Chalkboard SE","Chalkboard","Comic Sans MS","Klee One",ui-rounded,"SF Pro Rounded","Yuanti TC","Yuanti SC","Hiragino Maru Gothic ProN","Varela Round","PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;letter-spacing:.2px;
      color:#2B2119;display:flex;flex-direction:column;letter-spacing:.2px;
-     padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0}
-#bar{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:9px 12px;
+     padding:0}
+#bar{flex:0 0 auto;display:flex;align-items:center;gap:8px;
+     padding:calc(9px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right))
+             9px calc(12px + env(safe-area-inset-left));
      background:var(--dk);color:var(--tint);border-bottom:2px solid var(--md)}
 #bar h1{font-size:15px;margin:0;font-weight:700;flex:1;line-height:1.15;letter-spacing:.3px}
 #bar h1 span{display:block;font-size:9.5px;font-weight:500;color:var(--pale);letter-spacing:.4px}
 /* 署名固定在最底下，不隨分頁捲動；捲到哪裡都看得到。 */
 #credit{flex:0 0 auto;background:var(--dk);color:var(--pale);text-align:center;
         font-size:8.5px;letter-spacing:1.1px;line-height:1.35;border-top:2px solid var(--md);
-        padding:3px 10px calc(3px + env(safe-area-inset-bottom))}
+        padding:3px calc(10px + env(safe-area-inset-right))
+                calc(3px + env(safe-area-inset-bottom)) calc(10px + env(safe-area-inset-left))}
 #credit b{color:var(--ac);letter-spacing:1.6px;font-size:9.5px}
 #credit span{opacity:.75;margin-right:8px}
 .pick{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 6px}
@@ -91,7 +90,7 @@ body{font-family:"Chalkboard SE","Chalkboard","Comic Sans MS","Klee One",ui-roun
 #avBtn svg{width:17px;height:17px;fill:none;stroke:var(--dk);stroke-width:2.2;
   stroke-linecap:round;flex:0 0 auto}
 #avBtn:active{transform:translateY(2px);box-shadow:none}
-#drawer{position:fixed;inset:0;z-index:70;background:rgba(11,18,24,.55);
+#drawer{position:absolute;inset:0;z-index:70;background:rgba(11,18,24,.55);
   visibility:hidden;opacity:0;transition:opacity .18s}
 #drawer.on{visibility:visible;opacity:1}
 #drawerIn{position:absolute;left:0;top:0;bottom:0;width:min(310px,86vw);
@@ -276,7 +275,7 @@ details.guide summary{font-size:13px;font-weight:600;color:var(--md);padding:6px
 .card h2{font-size:15.5px;margin:0 0 4px;color:var(--md);font-weight:700;letter-spacing:.3px}
 .card h2:after{content:"";display:block;width:38px;height:3px;background:var(--ac);margin-top:6px;border-radius:2px}
 /* 計費筆記的閱讀覆蓋層。手機獨立視窗沒有瀏覽器介面，所以關閉鍵必須自己帶。 */
-#guideOverlay{position:fixed;inset:0;z-index:120;background:#F6F1E4;overflow:auto;
+#guideOverlay{position:absolute;inset:0;z-index:120;background:#F6F1E4;overflow:auto;
   -webkit-overflow-scrolling:touch}
 #guideBar{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:10px;
   background:#3B2A1B;color:#F6F1E4;
@@ -370,7 +369,7 @@ pre.out{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px
   /* sticky 放在 flex 直欄裡只黏得住一小段，捲到中間就跟丟了。
      直接釘在視窗底邊，另外把內容區的下緣讓出鍵列的高度，
      最後一張卡才不會被蓋住。 */
-  body #acts{position:fixed;left:0;right:0;bottom:0;z-index:20;margin:0;
+  body #acts{position:absolute;left:0;right:0;bottom:0;z-index:20;margin:0;
     padding:6px 12px calc(6px + env(safe-area-inset-bottom));
     background:rgba(11,18,24,.93);backdrop-filter:blur(3px)}
   /* 陰影交給立體膠囊那條規則，這裡不要再蓋一次 */
@@ -396,7 +395,7 @@ body.zoomed{overflow:hidden}
 /* 放大時整面深色鋪滿到底：只鋪到鍵列上緣的話，兩者高度算法差幾像素就會
    露出一條縫，底下那一頁的文字直接透出來。鍵列自己疊在最下面那一條，
    畫布由 fitZoomCanvas() 置中在「鍵列以上」的區域，所以不會被蓋到。 */
-body.zoomed #stage{position:fixed;inset:0;
+body.zoomed #stage{position:absolute;inset:0;
       z-index:60;margin:0;padding:0;background:#0B1218;
       display:flex;align-items:center;justify-content:center}
 /* 直向手機放大時場景會轉 90 度，鍵列也要跟著轉——不轉的話，人把頭側過去
@@ -406,8 +405,8 @@ body.zoomed.rot #stage{left:0;bottom:0}
 body.zoomed.rot #acts{background:rgba(11,18,24,.78)}
 /* 轉 90 度之後，這一條的「左端」會落在螢幕頂端，也就是瀏海／狀態列底下——
    第一顆鍵會被切掉一半。padding-left 補上安全區的高度，右端同理補底部。 */
-body.zoomed.rot #acts{position:fixed;top:0;bottom:auto;left:54px;right:auto;
-      width:100vh;height:54px;margin:0;
+body.zoomed.rot #acts{position:absolute;top:0;bottom:auto;left:54px;right:auto;
+      width:100vh;width:100svh;height:54px;margin:0;
       padding:6px calc(12px + env(safe-area-inset-bottom))
               6px calc(12px + env(safe-area-inset-top));
       transform-origin:0 0;transform:rotate(90deg);
@@ -417,8 +416,8 @@ body.zoomed.rot #acts{position:fixed;top:0;bottom:auto;left:54px;right:auto;
 body.zoomed.rot #actsMore{display:none}
 body.zoomed.rot #actsMore{background:linear-gradient(90deg,rgba(11,18,24,0) 0%,rgba(11,18,24,.96) 62%)}
 body.zoomed #stage canvas{max-width:none;max-height:none}
-body.zoomed #zoom{position:fixed;right:10px;top:calc(10px + env(safe-area-inset-top));z-index:62}
-body.zoomed #acts{position:fixed;left:0;right:0;bottom:0;z-index:61;margin:0;
+body.zoomed #zoom{position:absolute;right:10px;top:calc(10px + env(safe-area-inset-top));z-index:62}
+body.zoomed #acts{position:absolute;left:0;right:0;bottom:0;z-index:61;margin:0;
       padding:6px 8px calc(6px + env(safe-area-inset-bottom));background:rgba(11,18,24,.92)}
 /* 全螢幕的動作鍵縮一階，讓橫向一次多看到兩三顆。
    十六顆本來就排不完、一定要捲，但原本最後一顆被右緣的「››」壓掉一半，
@@ -477,7 +476,7 @@ body.zoomed #page{overflow:hidden}
 @media (prefers-reduced-motion:reduce){
   #tourHole,#tourBub{transition:none} #tourBar > i{transition:none!important}
 }
-#cover{position:fixed;inset:0;z-index:50;background:#3B2A1B;
+#cover{position:absolute;inset:0;z-index:50;background:#3B2A1B;
        background-image:radial-gradient(circle at 11px 5.5px,rgba(255,255,255,.05) 0 8px,transparent 8px);
        background-size:30px 30px;
        display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
@@ -524,7 +523,9 @@ body.zoomed #page{overflow:hidden}
 /* Cute rounded refresh - original warehouse colors preserved. */
 button,select,input{transition:transform .16s ease,box-shadow .16s ease,background-color .16s ease}
 button:active{transform:translateY(2px) scale(.98)}
-#bar{border-bottom-width:3px;padding:10px 12px}
+#bar{border-bottom-width:3px;
+     padding:calc(10px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right))
+             10px calc(12px + env(safe-area-inset-left))}
 #bar h1{font-weight:800}
 #bar h1:before{content:"✦";color:var(--ac);margin-right:6px}
 #avBtn,#sfx,select{border-radius:999px}
@@ -537,6 +538,25 @@ button:active{transform:translateY(2px) scale(.98)}
 #tabs button{border-radius:16px 16px 6px 6px}
 #page{background:var(--tint)}
 .scene,#stage{border-radius:22px!important;box-shadow:0 7px 0 var(--pale),0 10px 24px rgba(59,42,27,.13)}
+/* 上面那條圓角是給「卡片浮在頁面上」的寬螢幕版面用的。畫面窄到 #page 撐滿時，
+   #stage/.scene 是靠 margin:-12px 撐出去貼齊螢幕邊的，再套 22px 圓角就會把四個
+   角切掉、露出底下米白的 #page，看起來像沒滿版。撐滿時改回直角。
+   1080px 就是 #page 的 max-width：超過這個寬度它才會置中留白，圓角才有意義。 */
+@media (max-width:1080px){
+  .scene,#stage{border-radius:0!important}
+}
+/* 橫向時瀏海落在左右其中一邊。文字內容讓開，場景照樣鋪到真正的螢幕邊——
+   深色的畫面壓在瀏海底下不礙眼，字壓過去就看不到了。 */
+@media (orientation:landscape){
+  #navrow{padding-left:calc(8px + env(safe-area-inset-left));
+          padding-right:calc(8px + env(safe-area-inset-right))}
+  #rail{padding-left:calc(8px + env(safe-area-inset-left));
+        padding-right:calc(8px + env(safe-area-inset-right))}
+  #page{padding-left:calc(12px + env(safe-area-inset-left));
+        padding-right:calc(12px + env(safe-area-inset-right))}
+  #stage,.scene{margin-left:calc(-12px - env(safe-area-inset-left));
+                margin-right:calc(-12px - env(safe-area-inset-right))}
+}
 .card{background:#fff;border:2px solid #E0D3C0;border-radius:22px;padding:22px 16px 16px;box-shadow:0 6px 0 #D8C9B4,0 10px 24px rgba(59,42,27,.10)}
 .card:before{top:-6px;height:12px;background-image:radial-gradient(circle at 10px 6px,var(--ac) 0 8px,transparent 8px);background-size:30px 12px}
 .card h2{font-weight:800}
