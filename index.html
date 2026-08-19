@@ -1220,13 +1220,17 @@ body.th-poppy #cv.warehouse-pulse{animation:none}}
 /* 漸層鋪在 body 上、#page 讓成透明，整片才是連續的一塊。
    畫在 #page 上的話只有中間那 1080px 有色，桌機視窗一寬，
    左右就露出後面那層底色，中間還會多兩條接縫。 */
-body{background:linear-gradient(135deg,var(--dk),var(--md))!important;
-  background-attachment:fixed!important}
+/* html 也要鋪同一條：body 是 position:fixed、高度釘成 100svh，
+   Safari 的網址列收起來時可視高度會變大，body 之外那一截露的是 html。
+   另外 background 簡寫會把 background-color 重設成透明，所以兩邊都
+   再補一個實色墊底——漸層沒畫到的地方才不會是白的。 */
+html,body{background:linear-gradient(135deg,var(--dk),var(--md))!important;
+  background-color:var(--dk)!important;background-attachment:fixed!important}
 #page{background:transparent!important;background-image:none!important}
 /* Poppy 的頂欄是馬卡龍那三色，所以它接自己那一條。 */
-body.th-poppy{
+html.th-poppy,body.th-poppy{
   background:linear-gradient(135deg,var(--mac-a) 0%,var(--mac-b) 55%,var(--mac-c) 100%)!important;
-  background-attachment:fixed!important}
+  background-color:var(--mac-a)!important;background-attachment:fixed!important}
 /* 壓深之後動作鍵列跟頁面同色，看不出那是一條列，補一條上緣線。 */
 body[data-tab="0"] #acts{border-top:1px solid color-mix(in srgb,var(--pale) 34%,transparent)}
 </style>
