@@ -85,16 +85,33 @@ const chk=(n,c,x)=>(c?notes:fails).push((c?'PASS ':'FAIL ')+n+(x?'  '+x:''));
      'minx='+pud.minx+' maxx='+pud.maxx+' hydX='+pud.hydX);
  chk('尿柱最左端沒有超出消防栓', geo.minX >= geo.hydX-9, 'minX='+geo.minX+' hydX='+geo.hydX);
 
- /* ---------- Doodle 標題的星星不能自成一行 ---------- */
+ /* ---------- 標題：星星不能自成一行，四套主題字級要一樣 ---------- */
+ const titleM={};
  for(const th of ['doodle','goldie','poppy','barney']){
    await p.selectOption('#thsel', th); await p.waitForTimeout(450);
-   const m = await p.evaluate(()=>{
-     const h=document.getElementById('title');
-     const lh=parseFloat(getComputedStyle(h).lineHeight)||18;
+   titleM[th] = await p.evaluate(()=>{
+     const h=document.getElementById('title'), sp=h.querySelector('span');
+     const cs=getComputedStyle(h), lh=parseFloat(cs.lineHeight)||18;
+     const rng=document.createRange();
+     rng.setStart(h.firstChild,0); rng.setEnd(h.firstChild,h.firstChild.length);
      return {lines: Math.round(h.getBoundingClientRect().height/lh),
+             fs: cs.fontSize, subFs: getComputedStyle(sp).fontSize,
+             inkH: Math.round(rng.getBoundingClientRect().height),
              barH: Math.round(document.getElementById('bar').getBoundingClientRect().height)};
    });
-   chk(`${th}: 標題只有兩行（標題＋副標）`, m.lines <= 2, JSON.stringify(m));
+   chk(`${th}: 標題只有兩行（標題＋副標）`, titleM[th].lines <= 2, JSON.stringify(titleM[th]));
+ }
+ {
+   const ths=Object.keys(titleM), base=titleM.goldie;
+   chk('四套主題的標題字級相同', ths.every(t=>titleM[t].fs===base.fs),
+       ths.map(t=>t+':'+titleM[t].fs).join('  '));
+   chk('四套主題的副標字級相同', ths.every(t=>titleM[t].subFs===base.subFs),
+       ths.map(t=>t+':'+titleM[t].subFs).join('  '));
+   chk('四套主題的標題實際高度相同', ths.every(t=>Math.abs(titleM[t].inkH-base.inkH)<=1),
+       ths.map(t=>t+':'+titleM[t].inkH+'px').join('  '));
+   chk('四套主題的頂欄高度差不超過 3px（僅底線裝飾差異）',
+       Math.max(...ths.map(t=>titleM[t].barH)) - Math.min(...ths.map(t=>titleM[t].barH)) <= 3,
+       ths.map(t=>t+':'+titleM[t].barH+'px').join('  '));
  }
  await p.selectOption('#thsel','doodle'); await p.waitForTimeout(400);
  await p.screenshot({path:REAL+'/_verify_star.png',clip:{x:0,y:0,width:1000,height:90}});
