@@ -5,7 +5,7 @@
  * 上一版沒改這個字串就換了圖示，結果裝好的人一直吃到舊圖示——
  * 圖片走的是 cache-first，名稱沒變就永遠不會去抓新的。
  */
-const BUILD = "2026-08-20-v255";
+const BUILD = "2026-08-21-v256";
 const CACHE = "aw-" + BUILD;
 const SHELL = [
   "./", "./index.html", "./manifest.webmanifest",
@@ -31,7 +31,12 @@ self.addEventListener("fetch", e => {
   const url = new URL(req.url);
   if (url.origin !== location.origin) return;      /* 天氣 API 之類的不要攔 */
 
-  const isDoc = req.mode === "navigate" || url.pathname.endsWith(".html");
+  /* PDF 要排除在 isDoc 之外。另開分頁載 PDF 時 req.mode 就是 "navigate"，
+     走到下面那條離線 fallback 會回 index.html——分頁標題是 .pdf、內容卻是整個
+     APP，看起來像檔案壞掉。讓它走 stale-while-revalidate：開過就有快取可以離線
+     再開，沒開過就照實回網路錯誤，由瀏覽器顯示自己的離線頁。 */
+  const isPdf = url.pathname.endsWith(".pdf");
+  const isDoc = !isPdf && (req.mode === "navigate" || url.pathname.endsWith(".html"));
 
   if (isDoc) {
     /* HTML：network-first。改完重新上傳，一開就是新版。 */
